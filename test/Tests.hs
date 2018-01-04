@@ -1,23 +1,41 @@
+{-# LANGUAGE OverloadedStrings   #-}
 {-# LANGUAGE ScopedTypeVariables #-}
-{-# LANGUAGE OverloadedStrings #-}
 module Tests where
 
 import           Control.Applicative
 import           Crypto.RNCryptor.V3
-import qualified Data.ByteString as B
+import qualified Data.ByteString              as B
 import           Data.ByteString.Arbitrary
-import qualified Data.ByteString.Char8 as C8
+import qualified Data.ByteString.Char8        as C8
 import           Data.Word
 import           System.IO.Streams.ByteString
 import           System.IO.Streams.List
-import qualified Test.QuickCheck.Monadic as M
+import qualified Test.QuickCheck.Monadic      as M
 import           Test.Tasty.HUnit
 import           Test.Tasty.QuickCheck
+
+saltSize :: Int
+saltSize = 8
+
+genHeader :: Gen RNCryptorHeader
+genHeader = do
+  let version = toEnum 3
+  let options = toEnum 1
+  eSalt    <- C8.pack <$> vector saltSize
+  iv       <- C8.pack <$> vector blockSize
+  hmacSalt <- C8.pack <$> vector saltSize
+  return RNCryptorHeader {
+        rncVersion = version
+      , rncOptions = options
+      , rncEncryptionSalt = eSalt
+      , rncHMACSalt = hmacSalt
+      , rncIV = iv
+      }
 
 newtype TestVector = TV (UserInput, UserInput, RNCryptorHeader) deriving Show
 
 instance Arbitrary TestVector where
-  arbitrary = TV <$> ((,,) <$> arbitrary <*> arbitrary <*> arbitrary)
+  arbitrary = TV <$> ((,,) <$> arbitrary <*> arbitrary <*> genHeader)
 
 newtype UserInput = UI { unInput :: B.ByteString } deriving Show
 

@@ -1,7 +1,7 @@
-{-# LANGUAGE CPP #-}
-{-# LANGUAGE RecordWildCards #-}
-{-# LANGUAGE PackageImports #-}
+{-# LANGUAGE CPP                #-}
 {-# LANGUAGE DeriveDataTypeable #-}
+{-# LANGUAGE PackageImports     #-}
+{-# LANGUAGE RecordWildCards    #-}
 module Crypto.RNCryptor.Types
      ( RNCryptorException(..)
      , RNCryptorHeader(..)
@@ -22,31 +22,29 @@ module Crypto.RNCryptor.Types
      , IV
      ) where
 
-import              Control.Applicative
-import              Control.Exception (Exception)
-import              Control.Monad
-import              Crypto.Cipher.AES (AES256)
-import              Crypto.Cipher.Types (Cipher(..))
-import              Crypto.Error (CryptoFailable(..))
-import              Crypto.Hash (Digest(..))
-import              Crypto.Hash.Algorithms (SHA1(..), SHA256(..))
-import              Crypto.Hash.IO (HashAlgorithm(..))
+import           Control.Applicative
+import           Control.Exception              (Exception)
+import           Control.Monad
+import           Crypto.Cipher.AES              (AES256)
+import           Crypto.Cipher.Types            (Cipher (..))
+import           Crypto.Error                   (CryptoFailable (..))
+import           Crypto.Hash                    (Digest (..))
+import           Crypto.Hash.Algorithms         (SHA1 (..), SHA256 (..))
+import           Crypto.Hash.IO                 (HashAlgorithm (..))
 #if FASTPBKDF2
-import "fastpbkdf2" Crypto.KDF.PBKDF2 (fastpbkdf2_hmac_sha1)
+import           "fastpbkdf2" Crypto.KDF.PBKDF2 (fastpbkdf2_hmac_sha1)
 #else
-import "cryptonite" Crypto.KDF.PBKDF2
+import           "cryptonite" Crypto.KDF.PBKDF2
 #endif
-import              Crypto.MAC.HMAC (Context, initialize, hmac)
-import qualified    Crypto.MAC.HMAC as Crypto
-import              Data.ByteArray (ByteArray, convert)
-import              Data.ByteString (cons, ByteString, unpack)
-import qualified    Data.ByteString.Char8 as C8
-import              Data.Monoid
-import              Data.Typeable
-import              Data.Word
-import              System.Random
-import              Test.QuickCheck (Arbitrary(..), vector)
-
+import           Crypto.MAC.HMAC                (Context, hmac, initialize)
+import qualified Crypto.MAC.HMAC                as Crypto
+import           Data.ByteArray                 (ByteArray, convert)
+import           Data.ByteString                (ByteString, cons, unpack)
+import qualified Data.ByteString.Char8          as C8
+import           Data.Monoid
+import           Data.Typeable
+import           Data.Word
+import           System.Random
 
 data RNCryptorException =
   InvalidHMACException !ByteString !ByteString
@@ -85,21 +83,6 @@ data RNCryptorHeader = RNCryptorHeader {
 
 instance Show RNCryptorHeader where
   show = C8.unpack . renderRNCryptorHeader
-
-instance Arbitrary RNCryptorHeader where
-  arbitrary = do
-    let version = toEnum 3
-    let options = toEnum 1
-    eSalt    <- C8.pack <$> vector saltSize
-    iv       <- C8.pack <$> vector blockSize
-    hmacSalt <- C8.pack <$> vector saltSize
-    return RNCryptorHeader {
-          rncVersion = version
-        , rncOptions = options
-        , rncEncryptionSalt = eSalt
-        , rncHMACSalt = hmacSalt
-        , rncIV = iv
-        }
 
 --------------------------------------------------------------------------------
 saltSize :: Int
