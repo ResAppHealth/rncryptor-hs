@@ -5,6 +5,6 @@ let
                        then pkgs.haskellPackages
                        else pkgs.haskell.packages.${compiler};
 
-  rncryptor = modifiedHaskellPackages.callPackage ./rncryptor.nix {};
+  rncryptor = haskellPackages.callPackage ./rncryptor.nix {};
 in
   rncryptor
